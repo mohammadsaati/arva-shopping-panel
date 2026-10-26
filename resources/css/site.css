@@ -1,0 +1,61 @@
+@import "tailwindcss";
+@import "./select2.css";
+
+@theme {
+    --color-site-primary: #82445f;
+    --color-site-primary-dark: #613047;
+    --color-site-primary-light: #f5eaf0;
+    --color-site-accent: #a65837;
+    --color-site-ink: #30262d;
+    --color-site-muted: #756a71;
+    --color-site-bg: #fcfaf7;
+    --color-site-line: #e9e2e5;
+    --color-site-sage: #e9eee5;
+    --color-site-sand: #f2ece2;
+    --shadow-site: 0 8px 32px -12px rgb(48 38 45 / 12%);
+}
+
+@layer base {
+    body { font-family: IRANSansX, system-ui, sans-serif; }
+    button:not(:disabled), [role="button"] { @apply cursor-pointer; }
+    :where(a, button, input, select, textarea, summary):focus-visible {
+        @apply outline-2 outline-offset-4 outline-site-primary;
+    }
+    ::selection { @apply bg-site-primary/20 text-site-ink; }
+    :where(h1, h2, h3) { @apply text-balance; }
+    :where(input, select, textarea) { @apply min-w-0; }
+}
+
+@layer components {
+    .btn-site-outline {
+        @apply inline-flex min-h-11 items-center justify-center gap-2 rounded-full border border-site-line bg-white px-5 py-3 text-sm font-semibold text-site-ink transition-colors hover:border-site-primary/40 hover:bg-site-primary-light hover:text-site-primary disabled:cursor-not-allowed disabled:opacity-50;
+    }
+    .btn-site-primary {
+        @apply inline-flex min-h-11 items-center justify-center gap-2 rounded-full bg-site-primary px-6 py-3 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-site-primary-dark disabled:cursor-not-allowed disabled:opacity-50;
+    }
+    .input-site {
+        @apply min-h-12 w-full rounded-2xl border border-site-line bg-white px-4 py-3 text-base text-site-ink transition-colors placeholder:text-site-muted/80 focus:border-site-primary focus:outline-none focus:ring-4 focus:ring-site-primary/10 disabled:bg-site-sand disabled:text-site-muted sm:text-sm;
+    }
+    .site-card {
+        @apply min-w-0 rounded-3xl border border-site-line bg-white shadow-site;
+    }
+    .site-eyebrow {
+        @apply mb-3 inline-flex items-center gap-2 text-xs font-semibold text-site-primary;
+    }
+    .site-section-title {
+        @apply text-2xl font-bold leading-relaxed text-site-ink sm:text-3xl;
+    }
+    .site-icon-button {
+        @apply inline-flex size-11 shrink-0 items-center justify-center rounded-full border border-site-line bg-white text-site-ink transition-colors hover:border-site-primary/40 hover:bg-site-primary-light hover:text-site-primary disabled:cursor-not-allowed disabled:opacity-35;
+    }
+    .booking-slot {
+        @apply min-h-11 rounded-xl border border-site-line bg-white px-2 py-2 text-sm font-medium text-site-ink transition-colors hover:border-site-primary hover:bg-site-primary-light aria-pressed:border-site-primary aria-pressed:bg-site-primary aria-pressed:text-white;
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    *, ::before, ::after { @apply scroll-auto; animation-duration: 0.01ms !important; transition-duration: 0.01ms !important; }
+}
+
+@source "../../resources/views/**/*.blade.php";
+@source "../js/site.js";

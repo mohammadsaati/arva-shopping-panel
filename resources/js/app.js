@@ -1,0 +1,11 @@
+import './bootstrap';
+import './file-input';
+import './image-gallery-picker';
+import './modal';
+import './confirm-dialog';
+import './livewire';
+import './product-city-rates';
+import './select2';
+import './product-reviews';
+import '../css/product-reviews.css';
+import './item-specifications';

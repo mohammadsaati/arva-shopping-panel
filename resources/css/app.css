@@ -1,0 +1,12 @@
+@import "tailwindcss";
+@import "./styles.css";
+@import "./components.css";
+@import "./select2.css";
+
+@custom-variant dark (&:where(.dark, .dark *));
+
+[x-cloak] {
+    display: none !important;
+}
+
+@source "../../resources/views/**/*.blade.php";
