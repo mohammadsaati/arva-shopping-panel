@@ -15,6 +15,7 @@ return new class extends Migration
             $table->timestamps();
 
             $table->unique(['product_id', 'vendor_id']);
+            $table->index('vendor_id', 'vp_vendor_fk_idx');
         });
     }
 

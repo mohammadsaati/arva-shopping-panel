@@ -26,9 +26,25 @@ return new class extends Migration
 
     public function down(): void
     {
+        if (! Schema::hasIndex('vendor_products', 'vp_vendor_fk_idx')) {
+            Schema::table('vendor_products', function (Blueprint $table): void {
+                $table->index('vendor_id', 'vp_vendor_fk_idx');
+            });
+        }
+
+        if (Schema::hasIndex('vendor_products', 'vp_catalog_idx')) {
+            Schema::table('vendor_products', function (Blueprint $table): void {
+                $table->dropIndex('vp_catalog_idx');
+            });
+        }
+
+        if (Schema::hasIndex('vendor_products', 'vp_vendor_state_idx')) {
+            Schema::table('vendor_products', function (Blueprint $table): void {
+                $table->dropIndex('vp_vendor_state_idx');
+            });
+        }
+
         Schema::table('vendor_products', function (Blueprint $table): void {
-            $table->dropIndex('vp_catalog_idx');
-            $table->dropIndex('vp_vendor_state_idx');
             $table->dropColumn([
                 'price',
                 'stock',
