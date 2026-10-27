@@ -1,0 +1,12 @@
+.git
+.cursor
+.idea
+.DS_Store
+.env
+.env.*
+!.env.example
+node_modules
+public/node_modules
+public/hot
+storage/logs/*.log
+*.zip
