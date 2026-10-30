@@ -1,4 +1,4 @@
-<div class="sm:col-span-2">
+<div class="min-w-0 sm:col-span-2">
     <input type="hidden" name="item_ids_present" value="1" />
     @foreach ($selectedItemIds as $itemId)
         <input type="hidden" name="item_ids[]" value="{{ $itemId }}" wire:key="section-item-value-{{ $itemId }}" />

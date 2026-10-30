@@ -15,14 +15,6 @@
                     <x-form.input name="name" label="نام بخش" required />
                     <x-form.input name="slug" label="شناسه متنی (Slug)" dir="ltr" required />
                 </x-admin.form-section>
-                <x-admin.form-section title="آیتم‌های بخش" description="آیتم‌هایی را انتخاب کنید که در این بخش نشان داده می‌شوند." icon="ki-filled ki-package">
-                    <livewire:admin.sections.section-item-picker :selected-item-ids="old('item_ids', []) ?? []" />
-                </x-admin.form-section>
-                <x-admin.form-section title="گالری بخش" description="تصاویر گالری را در جایگاه‌های جدا اضافه کنید." icon="ki-filled ki-picture">
-                    <x-form.image-gallery name="images" class="sm:col-span-2" />
-                    @error('images') <p class="text-xs text-danger" role="alert">{{ $message }}</p> @enderror
-                    @error('images.*') <p class="text-xs text-danger" role="alert">{{ $message }}</p> @enderror
-                </x-admin.form-section>
             </div>
             <aside class="admin-form-sidebar" aria-label="تنظیمات بخش">
                 <x-admin.form-section title="ظاهر صفحهٔ بخش" description="رنگ و تصویر هدر این بخش" icon="ki-filled ki-color-swatch">
@@ -33,6 +25,16 @@
                     <x-form.select name="status" label="وضعیت" :options="$statusOptions" :selected="\App\Enums\GlobalStatusEnum::ACTIVE->value" required />
                 </x-admin.form-section>
             </aside>
+            <div class="admin-form-main col-span-full">
+                <x-admin.form-section title="آیتم‌های بخش" description="آیتم‌هایی را انتخاب کنید که در این بخش نشان داده می‌شوند." icon="ki-filled ki-package">
+                    <livewire:admin.sections.section-item-picker :selected-item-ids="old('item_ids', []) ?? []" />
+                </x-admin.form-section>
+                <x-admin.form-section title="گالری بخش" description="تصاویر گالری را در جایگاه‌های جدا اضافه کنید." icon="ki-filled ki-picture">
+                    <x-form.image-gallery name="images" class="sm:col-span-2" />
+                    @error('images') <p class="text-xs text-danger" role="alert">{{ $message }}</p> @enderror
+                    @error('images.*') <p class="text-xs text-danger" role="alert">{{ $message }}</p> @enderror
+                </x-admin.form-section>
+            </div>
         </div>
     </x-card.form>
 </x-panel-layout>
