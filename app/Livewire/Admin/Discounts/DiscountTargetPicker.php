@@ -7,6 +7,7 @@ use App\Livewire\Concerns\EnsuresAdminIsAuthenticated;
 use App\DTO\Discount\DiscountTargetFilterData;
 use App\Services\Contracts\DiscountServiceInterface;
 use Illuminate\Contracts\View\View;
+use Livewire\Attributes\Computed;
 use Livewire\Component;
 use Livewire\WithPagination;
 
@@ -106,6 +107,7 @@ class DiscountTargetPicker extends Component
         $this->resetPage();
     }
 
+    #[Computed]
     public function activeFilterCount(): int
     {
         $count = 0;

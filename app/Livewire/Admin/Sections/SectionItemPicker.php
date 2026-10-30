@@ -9,6 +9,7 @@ use App\Models\Item;
 use App\Services\Contracts\SectionServiceInterface;
 use Illuminate\Contracts\Pagination\Paginator;
 use Illuminate\Contracts\View\View;
+use Livewire\Attributes\Computed;
 use Livewire\Component;
 use Livewire\WithPagination;
 
@@ -84,6 +85,7 @@ class SectionItemPicker extends Component
         $this->resetPage();
     }
 
+    #[Computed]
     public function activeFilterCount(): int
     {
         $count = 0;
