@@ -16,6 +16,8 @@ use App\Models\Transaction;
 use App\Models\Product;
 use App\Models\ShoppingCart;
 use App\Models\ShoppingCartItem;
+use App\Models\VendorOrder;
+use App\Models\VendorProduct;
 use App\Models\User;
 use App\Services\Contracts\OrderServiceInterface;
 use App\Services\Contracts\DiscountServiceInterface;
@@ -57,8 +59,6 @@ class OrderService implements OrderServiceInterface
             }
 
             $subtotal = 0;
-            $products = [];
-
             foreach ($cartItems as $cartItem) {
                 $product = Product::findPurchasableForCart($cartItem->product_id, lock: true);
 
@@ -68,10 +68,18 @@ class OrderService implements OrderServiceInterface
                     ]);
                 }
 
-                $lineTotal = $product->price * $cartItem->count;
-                $subtotal += $lineTotal;
-                $products[] = $product;
+                $offer = $cartItem->vendor_product_id !== null
+                    ? VendorProduct::findForCart($product->id, $cartItem->vendor_product_id, lock: true)
+                    : null;
+
+                if ($cartItem->vendor_product_id !== null && ($offer === null || $cartItem->count > $offer->stock)) {
+                    throw ValidationException::withMessages(['cart' => 'فروشنده یا موجودی یکی از کالاها دیگر در دسترس نیست.']);
+                }
+
                 $cartItem->setRelation('product', $product);
+                $cartItem->setRelation('vendorProduct', $offer);
+                $lineTotal = $cartItem->unitPrice() * $cartItem->count;
+                $subtotal += $lineTotal;
             }
 
             $cart->setRelation('items', $cartItems);
@@ -84,7 +92,7 @@ class OrderService implements OrderServiceInterface
                 )
                 : null;
 
-            $shippingTotal = $this->shoppingCart->shippingForProducts($products, $address->city_id);
+            $shippingTotal = $this->shoppingCart->shippingForCart($cart, $address->city_id);
             $payable = max(0, $subtotal - ($discountQuote?->discountAmount ?? 0)) + $shippingTotal;
             $gateway = null;
 
@@ -105,11 +113,35 @@ class OrderService implements OrderServiceInterface
             }
 
             $order = Order::createForCheckout($user, $address);
+            $vendorOrders = [];
+            $discountRemaining = $discountQuote?->discountAmount ?? 0;
+            $eligibleRemaining = $discountQuote?->eligibleSubtotal ?? 0;
 
             foreach ($cartItems as $cartItem) {
                 $product = $cartItem->product;
-                OrderItem::createForOrder($order, $product, $cartItem->count, $product->price * $cartItem->count);
+                $offer = $cartItem->vendorProduct;
+                $unitPrice = $cartItem->unitPrice();
+                $lineTotal = $unitPrice * $cartItem->count;
+                $eligible = $discountQuote !== null && in_array($product->id, $discountQuote->eligibleProductIds, true);
+                $lineDiscount = $eligible && $eligibleRemaining > 0
+                    ? intdiv($discountRemaining * $lineTotal, $eligibleRemaining)
+                    : 0;
+
+                if ($eligible) {
+                    $discountRemaining -= $lineDiscount;
+                    $eligibleRemaining -= $lineTotal;
+                }
+
+                $vendorOrder = null;
+
+                if ($offer !== null) {
+                    $vendorOrder = $vendorOrders[$offer->vendor_id]
+                        ??= VendorOrder::createForOrder($order, $offer->vendor);
+                }
+
+                OrderItem::createForOrder($order, $product, $cartItem->count, $unitPrice, $lineDiscount, $offer, $vendorOrder);
                 $product->decreaseStock($cartItem->count);
+                $offer?->decreaseStock($cartItem->count);
             }
 
             $order->updateTotals(

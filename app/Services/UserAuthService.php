@@ -4,6 +4,7 @@ namespace App\Services;
 
 use App\DTO\user\UserCreateData;
 use App\Models\User;
+use App\Enums\UserTypeEnum;
 use App\Services\Contracts\UserAuthServiceInterface;
 use App\Services\Contracts\UserServiceInterface;
 use Illuminate\Support\Facades\Auth;
@@ -15,7 +16,7 @@ class UserAuthService implements UserAuthServiceInterface
 
     public function attempt(string $phone, string $password): bool
     {
-        $user = User::findActiveCustomerByPhone($phone);
+        $user = User::findActiveAccountByPhone($phone);
 
         if ($user === null || ! Hash::check($password, $user->password)) {
             return false;
@@ -37,5 +38,12 @@ class UserAuthService implements UserAuthServiceInterface
     public function logout(): void
     {
         Auth::guard('web')->logout();
+    }
+
+    public function defaultRedirectRoute(): string
+    {
+        return Auth::guard('web')->user()?->type === UserTypeEnum::VENDOR
+            ? 'vendor.dashboard.index'
+            : 'home';
     }
 }

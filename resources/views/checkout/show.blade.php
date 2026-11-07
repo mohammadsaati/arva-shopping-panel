@@ -129,7 +129,7 @@
                     @foreach ($cart->items as $cartItem)
                         @php
                             $product = $cartItem->product;
-                            $lineTotal = $product->price * $cartItem->count;
+                            $lineTotal = $cartItem->unitPrice() * $cartItem->count;
                         @endphp
                         <li>
                             <a href="{{ route('shop.products.show', ['productId' => $product->id]) }}">
@@ -137,7 +137,7 @@
                             </a>
                             <div>
                                 <a href="{{ route('shop.products.show', ['productId' => $product->id]) }}">{{ $product->item->name }}</a>
-                                <small>{{ $cartItem->count }} عدد · {{ number_format($product->price) }} تومان</small>
+                                <small>{{ $cartItem->count }} عدد · {{ number_format($cartItem->unitPrice()) }} تومان @if ($cartItem->vendorProduct) · {{ $cartItem->vendorProduct->vendor->company_name }} @endif</small>
                             </div>
                             <strong>{{ number_format($lineTotal) }}</strong>
                         </li>

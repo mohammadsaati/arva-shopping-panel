@@ -18,6 +18,7 @@ return new class extends Migration
             $table->string('first_name');
             $table->string('last_name');
             $table->string('phone')->unique()->index();
+            $table->string('recovery_email')->nullable()->unique();
             $table->string('password');
             $table->string('api_key')->unique()->index();
             $table->string('type')->default(UserTypeEnum::NORMAL->value);

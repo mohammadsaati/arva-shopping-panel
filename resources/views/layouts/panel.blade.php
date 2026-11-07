@@ -6,7 +6,7 @@
       lang="{{ config('theme.language') }}"
 >
 <head>
-    <title>{{ site_name() }} | پنل مدیریت</title>
+    <title>{{ site_name() }} | {{ request()->is('vendor*') ? 'پنل فروشنده' : 'پنل مدیریت' }}</title>
 
     <meta charset="utf-8"/>
     <meta content="width=device-width, initial-scale=1, shrink-to-fit=no" name="viewport"/>

@@ -11,7 +11,7 @@ class UserPasswordResetService implements UserPasswordResetServiceInterface
 {
     public function sendResetLink(string $phone): void
     {
-        $user = User::findActiveCustomerByPhone($phone);
+        $user = User::findActiveAccountByPhone($phone);
 
         if ($user === null) {
             return;

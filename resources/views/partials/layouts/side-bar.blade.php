@@ -1,6 +1,6 @@
 @php
     use App\Commons\Menu\MenuRegistry;
-    $menuName = $menuName ?? (request()->is('owner*') ? 'owner' : 'admin');
+    $menuName = $menuName ?? (request()->is('vendor*') ? 'vendor' : (request()->is('owner*') ? 'owner' : 'admin'));
 @endphp
 
     <!-- Sidebar -->

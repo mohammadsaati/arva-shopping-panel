@@ -27,6 +27,9 @@ class UpdateAdminUserRequest extends FormRequest
             'bank_card' => ['nullable', 'string', 'max:255'],
             'job' => ['nullable', 'string', 'max:255'],
             'city_id' => ['nullable', 'string', 'max:255'],
+            'vendor_company_name' => ['required_if:type,'.UserTypeEnum::VENDOR->value, 'nullable', 'string', 'max:255'],
+            'vendor_city_id' => ['required_if:type,'.UserTypeEnum::VENDOR->value, 'nullable', 'integer'],
+            'commission_id' => ['nullable', 'integer', 'exists:commissions,id'],
         ];
     }
 }

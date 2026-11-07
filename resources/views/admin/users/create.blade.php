@@ -41,6 +41,13 @@
                 required
             />
                 </x-admin.form-section>
+                <div id="vendor_fields" @if (old('type', \App\Enums\UserTypeEnum::NORMAL->value) !== \App\Enums\UserTypeEnum::VENDOR->value) hidden @endif>
+                    <x-admin.form-section title="اطلاعات فروشنده" description="مشخصات فروشگاه و کمیسیون اختیاری این فروشنده را ثبت کنید." icon="ki-filled ki-shop" :two-columns="true">
+                        <x-form.input name="vendor_company_name" label="نام شرکت یا فروشگاه" required />
+                        <x-form.select name="vendor_city_id" label="شهر فروشنده" :options="$vendorCityOptions" placeholder="شهر را انتخاب کنید" required />
+                        <x-form.select name="commission_id" label="کمیسیون" :options="$vendorCommissionOptions" placeholder="بدون کمیسیون" hint="در صورت نیاز، از منوی کمیسیون‌ها یک عنوان و درصد جدید بسازید." />
+                    </x-admin.form-section>
+                </div>
             </div>
             <aside class="admin-form-sidebar" aria-label="تنظیمات حساب">
                 <x-admin.form-section title="دسترسی" description="نوع حساب کاربری" icon="ki-filled ki-setting-2">
@@ -72,4 +79,23 @@
             </aside>
         </div>
     </x-card.form>
+    @push('scripts')
+        <script>
+            document.addEventListener('DOMContentLoaded', () => {
+                const type = document.getElementById('select_type');
+                const section = document.getElementById('vendor_fields');
+                const fields = section?.querySelectorAll('input, select') ?? [];
+                const toggle = () => {
+                    const isVendor = type?.value === @json(\App\Enums\UserTypeEnum::VENDOR->value);
+                    section.hidden = !isVendor;
+                    fields.forEach((field) => {
+                        field.disabled = !isVendor;
+                        field.required = isVendor && field.name !== 'commission_id';
+                    });
+                };
+                type?.addEventListener('change', toggle);
+                toggle();
+            });
+        </script>
+    @endpush
 </x-panel-layout>

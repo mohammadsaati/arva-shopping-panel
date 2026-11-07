@@ -15,8 +15,10 @@ use App\Http\Controllers\Admin\SizeController;
 use App\Http\Controllers\Admin\SectionController;
 use App\Http\Controllers\Admin\SliderController;
 use App\Http\Controllers\Admin\UserController;
+use App\Http\Controllers\Admin\CommissionController;
 use App\Http\Controllers\Admin\OrderController;
 use App\Http\Controllers\Admin\ProductReviewController;
+use App\Http\Controllers\Admin\VendorProductApprovalController;
 use App\Http\Controllers\Admin\DiscountController;
 use App\Http\Controllers\Admin\SiteSettingController;
 use App\Http\Controllers\Admin\FooterContentController;
@@ -98,6 +100,17 @@ Route::middleware('web')->group(function (): void {
             Route::get('/{userId}', 'show')->whereNumber('userId')->name('show');
         });
 
+    Route::controller(CommissionController::class)
+        ->prefix('commissions')
+        ->name('commissions.')
+        ->group(function (): void {
+            Route::get('/', 'index')->name('index');
+            Route::get('/create', 'create')->name('create');
+            Route::post('/', 'store')->name('store');
+            Route::get('/{commissionId}/edit', 'edit')->whereNumber('commissionId')->name('edit');
+            Route::put('/{commissionId}', 'update')->whereNumber('commissionId')->name('update');
+        });
+
     Route::controller(OrderController::class)
         ->prefix('orders')
         ->name('orders.')
@@ -124,6 +137,15 @@ Route::middleware('web')->group(function (): void {
             Route::get('/', 'index')->name('index');
             Route::get('/{reviewId}', 'show')->whereNumber('reviewId')->name('show');
             Route::put('/{reviewId}', 'update')->whereNumber('reviewId')->name('update');
+        });
+
+    Route::controller(VendorProductApprovalController::class)
+        ->prefix('vendor-products')
+        ->name('vendor-products.')
+        ->group(function (): void {
+            Route::get('/', 'index')->name('index');
+            Route::patch('/{vendorProductId}/approval', 'updateApproval')->whereNumber('vendorProductId')->name('approval.update');
+            Route::get('/{vendorProductId}', 'show')->whereNumber('vendorProductId')->name('show');
         });
 
     Route::controller(DiscountController::class)

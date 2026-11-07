@@ -101,6 +101,9 @@
             <x-datatable-heading>قیمت واحد</x-datatable-heading>
             <x-datatable-heading>تعداد</x-datatable-heading>
             <x-datatable-heading>مبلغ ردیف</x-datatable-heading>
+            <x-datatable-heading>فروشنده</x-datatable-heading>
+            <x-datatable-heading>درصد کمیسیون</x-datatable-heading>
+            <x-datatable-heading>مبلغ کمیسیون</x-datatable-heading>
         </x-slot:head>
         @forelse ($order->items as $orderItem)
             <tr class="border-b border-gray-100">
@@ -109,9 +112,12 @@
                 <td class="px-5 py-3 whitespace-nowrap">{{ number_format($orderItem->unit_price) }} تومان</td>
                 <td class="px-5 py-3">{{ $orderItem->count }}</td>
                 <td class="px-5 py-3 whitespace-nowrap font-medium">{{ number_format($orderItem->total_price) }} تومان</td>
+                <td class="px-5 py-3">{{ $orderItem->vendorOrder?->vendor_name ?? 'فروشگاه' }}</td>
+                <td class="px-5 py-3" dir="ltr">{{ number_format($orderItem->commission_rate_bps / 100, 2) }}٪</td>
+                <td class="px-5 py-3 whitespace-nowrap">{{ number_format($orderItem->commission_amount) }} تومان</td>
             </tr>
         @empty
-            <tr><td colspan="5" class="px-5 py-10 text-center text-gray-400">کالایی برای این سفارش ثبت نشده است.</td></tr>
+            <tr><td colspan="8" class="px-5 py-10 text-center text-gray-400">کالایی برای این سفارش ثبت نشده است.</td></tr>
         @endforelse
     </x-datatable>
 

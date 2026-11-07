@@ -5,6 +5,7 @@ use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
+use App\Http\Middleware\EnsureVendor;
 
 return Application::configure(basePath: dirname(__DIR__))
     ->withRouting(
@@ -20,12 +21,18 @@ return Application::configure(basePath: dirname(__DIR__))
                 ->as('admin.')
                 ->group(base_path('routes/admin.php'));
 
+            Route::middleware('web')
+                ->prefix('vendor')
+                ->as('vendor.')
+                ->group(base_path('routes/vendor.php'));
+
             Route::prefix('telegram')
                 ->as('telegram.')
                 ->group(base_path('routes/telegram.php'));
         },
     )
     ->withMiddleware(function (Middleware $middleware): void {
+        $middleware->alias(['vendor' => EnsureVendor::class]);
         $middleware->redirectGuestsTo(function (Request $request): string {
             return $request->is('admin', 'admin/*')
                 ? route('admin.login')

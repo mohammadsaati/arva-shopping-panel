@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use Closure;
 use App\DTO\user\UserCreateData;
 use App\DTO\user\UserAdminUpdateData;
 use App\DTO\user\UserFilterData;
@@ -44,6 +45,7 @@ use RuntimeException;
  * @property-read \Illuminate\Database\Eloquent\Collection<int, Order> $orders
  * @property-read \Illuminate\Database\Eloquent\Collection<int, ProductReview> $productReviews
  * @property-read Customer|null $customer
+ * @property-read Vendor|null $vendor
  * @property-read \Illuminate\Database\Eloquent\Collection<int, CustomerAddress> $addresses
  */
 #[Guarded('id')]
@@ -71,6 +73,11 @@ class User extends Authenticatable
     public function customer(): HasOne
     {
         return $this->hasOne(Customer::class);
+    }
+
+    public function vendor(): HasOne
+    {
+        return $this->hasOne(Vendor::class);
     }
 
     public function addresses(): HasManyThrough
@@ -156,8 +163,13 @@ class User extends Authenticatable
     public static function details(int $userId): self
     {
         return self::query()
-            ->with('profile')
+            ->with(['profile', 'vendor.city', 'vendor.commission'])
             ->findOrFail($userId);
+    }
+
+    public static function runInTransaction(Closure $callback): mixed
+    {
+        return DB::transaction($callback);
     }
 
     public static function generateUniqueApiKey(): string
@@ -265,6 +277,15 @@ class User extends Authenticatable
             ->first();
     }
 
+    public static function findActiveAccountByPhone(string $phone): ?self
+    {
+        return self::query()
+            ->where('phone', $phone)
+            ->where('status', GlobalStatusEnum::ACTIVE->value)
+            ->whereIn('type', [UserTypeEnum::NORMAL->value, UserTypeEnum::VENDOR->value])
+            ->first();
+    }
+
     public function updatePassword(string $password): void
     {
         $this->password = $password;
@@ -295,7 +316,7 @@ class User extends Authenticatable
 
     public static function resetPasswordFromToken(string $phone, string $plainToken, string $password): void
     {
-        $user = self::findActiveCustomerByPhone($phone);
+        $user = self::findActiveAccountByPhone($phone);
 
         if ($user === null) {
             throw ValidationException::withMessages([

@@ -92,6 +92,7 @@ class ShoppingCartController extends Controller
             new ShoppingCartItemAddData(
                 productId: $productId,
                 quantity: $request->quantity(),
+                vendorProductId: $request->filled('vendor_product_id') ? $request->integer('vendor_product_id') : null,
             ),
         );
 

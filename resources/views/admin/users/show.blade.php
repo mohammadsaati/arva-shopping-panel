@@ -42,6 +42,34 @@
         </dl>
     </x-card>
 
+    @if ($user->vendor)
+        <x-card title="اطلاعات فروشنده">
+            <dl class="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
+                <div>
+                    <dt class="text-sm text-gray-500">نام فروشگاه</dt>
+                    <dd class="mt-1 font-medium text-gray-900">{{ $user->vendor->company_name }}</dd>
+                </div>
+                <div>
+                    <dt class="text-sm text-gray-500">شهر</dt>
+                    <dd class="mt-1 font-medium text-gray-900">{{ $user->vendor->city->name }}</dd>
+                </div>
+                <div>
+                    <dt class="text-sm text-gray-500">کمیسیون</dt>
+                    <dd class="mt-1 font-medium text-gray-900">
+                        @if ($user->vendor->commission)
+                            {{ $user->vendor->commission->title }} ({{ number_format($user->vendor->commission->rate_bps / 100, 2) }}٪)
+                        @else
+                            بدون کمیسیون
+                        @endif
+                    </dd>
+                </div>
+            </dl>
+            <div class="mt-4">
+                <x-button href="{{ route('admin.users.edit', $user->id) }}" variant="light" icon="ki-filled ki-notepad-edit">تغییر کمیسیون فروشنده</x-button>
+            </div>
+        </x-card>
+    @endif
+
     <x-card title="اطلاعات پروفایل">
         @if ($user->profile)
             <dl class="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">

@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Admin;
 use App\DTO\user\UserCreateData;
 use App\DTO\user\UserAdminUpdateData;
 use App\DTO\user\UserProfileUpdateData;
+use App\DTO\Vendor\VendorCreateData;
 use App\Enums\GlobalStatusEnum;
 use App\Enums\UserTypeEnum;
 use App\Http\Controllers\Controller;
@@ -41,14 +42,19 @@ class UserController extends Controller
 
     public function edit(string $userId): View
     {
+        $user = $this->users->details((int) $userId);
+
         return view('admin.users.edit', [
-            'user' => $this->users->details((int) $userId),
+            'user' => $user,
             'userTypes' => collect(UserTypeEnum::toKeyValueType())
+                ->when($user->vendor !== null, fn ($items) => $items->filter(fn ($item) => $item->value === UserTypeEnum::VENDOR->value))
                 ->mapWithKeys(fn ($item) => [$item->value => $item->key])
                 ->all(),
             'statusOptions' => collect(GlobalStatusEnum::toKeyValueType())
                 ->mapWithKeys(fn ($item) => [$item->value => $item->key])
                 ->all(),
+            'vendorCityOptions' => $this->users->vendorCityOptions(),
+            'vendorCommissionOptions' => $this->users->vendorCommissionOptions(),
         ]);
     }
 
@@ -69,6 +75,13 @@ class UserController extends Controller
                 cityId: $request->filled('city_id') ? $request->string('city_id')->value() : null,
                 cityIdProvided: $request->has('city_id'),
             ),
+            vendor: $request->enum('type', UserTypeEnum::class) === UserTypeEnum::VENDOR
+                ? new VendorCreateData(
+                    companyName: $request->string('vendor_company_name')->value(),
+                    cityId: $request->integer('vendor_city_id'),
+                    commissionId: $request->filled('commission_id') ? $request->integer('commission_id') : null,
+                )
+                : null,
         ));
 
         return redirect()
@@ -82,6 +95,8 @@ class UserController extends Controller
             'userTypes' => collect(UserTypeEnum::toKeyValueType())
                 ->mapWithKeys(fn ($item) => [$item->value => $item->key])
                 ->all(),
+            'vendorCityOptions' => $this->users->vendorCityOptions(),
+            'vendorCommissionOptions' => $this->users->vendorCommissionOptions(),
         ]);
     }
 
@@ -93,6 +108,13 @@ class UserController extends Controller
             phone: $request->string('phone')->value(),
             password: $request->string('password')->value(),
             type: $request->enum('type', UserTypeEnum::class),
+            vendor: $request->enum('type', UserTypeEnum::class) === UserTypeEnum::VENDOR
+                ? new VendorCreateData(
+                    companyName: $request->string('vendor_company_name')->value(),
+                    cityId: $request->integer('vendor_city_id'),
+                    commissionId: $request->filled('commission_id') ? $request->integer('commission_id') : null,
+                )
+                : null,
         ));
 
         return redirect()

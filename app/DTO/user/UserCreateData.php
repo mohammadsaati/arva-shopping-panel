@@ -2,6 +2,7 @@
 
 namespace App\DTO\user;
 
+use App\DTO\Vendor\VendorCreateData;
 use App\Enums\UserTypeEnum;
 
 final readonly class UserCreateData
@@ -12,6 +13,7 @@ final readonly class UserCreateData
         public string $phone,
         public string $password,
         public UserTypeEnum $type = UserTypeEnum::NORMAL,
+        public ?VendorCreateData $vendor = null,
     ) {
     }
 }

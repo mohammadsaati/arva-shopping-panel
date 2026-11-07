@@ -21,6 +21,9 @@ class StoreAdminUserRequest extends FormRequest
             'phone' => ['required', 'string', 'max:255', 'unique:users,phone'],
             'type' => ['required', 'string', Rule::enum(UserTypeEnum::class)],
             'password' => ['required', 'string', 'min:8', 'confirmed'],
+            'vendor_company_name' => ['required_if:type,'.UserTypeEnum::VENDOR->value, 'nullable', 'string', 'max:255'],
+            'vendor_city_id' => ['required_if:type,'.UserTypeEnum::VENDOR->value, 'nullable', 'integer'],
+            'commission_id' => ['nullable', 'integer', 'exists:commissions,id'],
         ];
     }
 }
