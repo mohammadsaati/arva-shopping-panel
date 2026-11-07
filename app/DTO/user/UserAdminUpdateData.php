@@ -4,6 +4,7 @@ namespace App\DTO\user;
 
 use App\Enums\GlobalStatusEnum;
 use App\Enums\UserTypeEnum;
+use App\DTO\Vendor\VendorCreateData;
 
 final readonly class UserAdminUpdateData
 {
@@ -14,6 +15,7 @@ final readonly class UserAdminUpdateData
         public ?UserTypeEnum $type = null,
         public ?GlobalStatusEnum $status = null,
         public ?UserProfileUpdateData $profile = null,
+        public ?VendorCreateData $vendor = null,
     ) {
     }
 

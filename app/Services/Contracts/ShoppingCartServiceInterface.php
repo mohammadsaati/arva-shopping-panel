@@ -5,7 +5,6 @@ namespace App\Services\Contracts;
 use App\DTO\Cart\ShoppingCartItemAddData;
 use App\DTO\Cart\ShoppingCartUpdateData;
 use App\Models\ShoppingCart;
-use App\Models\Product;
 use Illuminate\Database\Eloquent\Collection;
 use App\Models\CustomerAddress;
 
@@ -21,8 +20,7 @@ interface ShoppingCartServiceInterface
 
     public function remove(string $shoppingKey, int $productId): void;
 
-    /** @param array<int, Product> $products */
-    public function shippingForProducts(array $products, int $cityId): int;
+    public function shippingForCart(ShoppingCart $cart, int $cityId): int;
 
     /**
      * @param Collection<int, CustomerAddress> $addresses

@@ -186,7 +186,8 @@ class Category extends Model
                 $builder->where('status', GlobalStatusEnum::ACTIVE->value)
                     ->whereHas('products', function (Builder $productBuilder): void {
                         $productBuilder->where('status', GlobalStatusEnum::ACTIVE->value)
-                            ->where('stock', '>', 0);
+                            ->where('stock', '>', 0)
+                            ->visibleToCustomers();
                     });
             })
             ->orderBy('priority')

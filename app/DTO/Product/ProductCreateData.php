@@ -21,6 +21,7 @@ final readonly class ProductCreateData
         public GlobalStatusEnum $status,
         public array $images = [],
         public array $cityRates = [],
+        public ?int $vendorId = null,
     ) {
     }
 }

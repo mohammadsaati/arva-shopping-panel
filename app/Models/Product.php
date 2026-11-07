@@ -6,6 +6,7 @@ use App\DTO\Item\ItemProductCreateData;
 use App\DTO\Product\ProductCreateData;
 use App\DTO\Product\ProductFilterData;
 use App\DTO\Product\ProductUpdateData;
+use App\DTO\VendorPanel\VendorProductFilterData;
 use App\DTO\Discount\DiscountTargetFilterData;
 use App\Enums\GlobalStatusEnum;
 use App\Enums\ProductStockFilterEnum;
@@ -34,6 +35,8 @@ use Illuminate\Validation\ValidationException;
  * @property Carbon $updated_at
  * @property-read Collection<int, ProductImage> $images
  * @property-read Collection<int, ProductCity> $cityRates
+ * @property-read Collection<int, VendorProduct> $vendorOffers
+ * @property-read Collection<int, VendorProduct> $vendorOffersForManagement
  */
 
 #[Guarded('id')]
@@ -76,6 +79,26 @@ class Product extends Model
         return $this->hasMany(ProductCity::class)->orderBy('city_id');
     }
 
+    public function vendorOffers(): HasMany
+    {
+        return $this->hasMany(VendorProduct::class)
+            ->approvedForStorefront()
+            ->where('stock', '>', 0);
+    }
+
+    public function vendorOffersForManagement(): HasMany
+    {
+        return $this->hasMany(VendorProduct::class);
+    }
+
+    public function scopeVisibleToCustomers(Builder $builder): void
+    {
+        $builder->where(function (Builder $builder): void {
+            $builder->whereDoesntHave('item', fn (Builder $item) => $item->whereNotNull('vendor_id'))
+                ->orWhereHas('vendorOffers');
+        });
+    }
+
     protected function casts(): array
     {
         return [
@@ -84,6 +107,58 @@ class Product extends Model
             'shipping_price' => 'integer',
             'status' => GlobalStatusEnum::class,
         ];
+    }
+
+    public function bestVendorOffer(): ?VendorProduct
+    {
+        if ($this->relationLoaded('vendorOffers')) {
+            return $this->vendorOffers
+                ->sortBy(fn (VendorProduct $offer): int => $offer->effectivePrice($this))
+                ->first();
+        }
+
+        return VendorProduct::selectedForCart($this->id, null);
+    }
+
+    public static function filterForVendor(int $vendorId, VendorProductFilterData $filters): Paginator
+    {
+        $sorts = array_intersect_key($filters->sorts, array_flip(['id', 'price', 'stock', 'created_at']));
+        $sorts = $sorts !== [] ? $sorts : ['id' => 'desc'];
+        $query = self::query()
+            ->whereHas('item', fn (Builder $item) => $item->where('vendor_id', $vendorId))
+            ->with([
+                'item',
+                'color',
+                'size',
+                'vendorOffersForManagement' => fn (HasMany $offers) => $offers->where('vendor_id', $vendorId),
+            ])
+            ->when($filters->search !== null && trim($filters->search) !== '', fn (Builder $builder) => $builder
+                ->whereHas('item', fn (Builder $item) => $item->where('name', 'like', '%' . trim($filters->search) . '%')));
+
+        foreach ($sorts as $column => $direction) {
+            $query->orderBy($column, $direction);
+        }
+
+        return $query->simplePaginate(perPage: $filters->perPage, page: $filters->page)->withQueryString();
+    }
+
+    public static function detailsForVendor(int $vendorId, int $productId): self
+    {
+        return self::query()
+            ->whereHas('item', fn (Builder $item) => $item->where('vendor_id', $vendorId))
+            ->with([
+                'item',
+                'color',
+                'size',
+                'images',
+                'vendorOffersForManagement' => fn (HasMany $offers) => $offers->where('vendor_id', $vendorId),
+            ])
+            ->findOrFail($productId);
+    }
+
+    public static function countForVendor(int $vendorId): int
+    {
+        return self::query()->whereHas('item', fn (Builder $item) => $item->where('vendor_id', $vendorId))->count();
     }
 
     public static function filter(ProductFilterData $filters): Paginator
@@ -139,6 +214,7 @@ class Product extends Model
         return self::query()
             ->where('status', GlobalStatusEnum::ACTIVE->value)
             ->where('stock', '>', 0)
+            ->visibleToCustomers()
             ->when($search !== '', function (Builder $builder) use ($search): void {
                 $builder->whereHas('item', function (Builder $itemQuery) use ($search): void {
                     $itemQuery->where('name', 'like', "%{$search}%")
@@ -153,7 +229,7 @@ class Product extends Model
                 $builder->where('status', GlobalStatusEnum::ACTIVE->value)
                     ->whereHas('category', fn (Builder $categoryBuilder) => $categoryBuilder->where('status', GlobalStatusEnum::ACTIVE->value));
             })
-            ->with(['item.category', 'item.brand'])
+            ->with(['item.category', 'item.brand', 'vendorOffers.vendor'])
             ->orderByDesc('created_at')
             ->limit(max(1, min($limit, 16)))
             ->get();
@@ -184,6 +260,10 @@ class Product extends Model
             $product->status = $data->status;
             $product->save();
 
+            if ($data->vendorId !== null) {
+                VendorProduct::createForProduct($product, $data->vendorId);
+            }
+
             foreach ($imagePaths as $path) {
                 ProductImage::createForProduct($product, $path);
             }
@@ -207,6 +287,7 @@ class Product extends Model
             ->whereKey($productId)
             ->where('status', GlobalStatusEnum::ACTIVE->value)
             ->where('stock', '>', 0)
+            ->visibleToCustomers()
             ->whereHas('item', fn (Builder $item) => $item
                 ->where('status', GlobalStatusEnum::ACTIVE->value)
                 ->whereHas('category', fn (Builder $category) => $category
@@ -247,6 +328,7 @@ class Product extends Model
         return self::query()
             ->whereKey($productId)
             ->where('status', GlobalStatusEnum::ACTIVE->value)
+            ->visibleToCustomers()
             ->whereHas('item', fn (Builder $item) => $item
                 ->where('status', GlobalStatusEnum::ACTIVE->value)
                 ->whereHas('category', fn (Builder $category) => $category
@@ -258,6 +340,7 @@ class Product extends Model
                 'item.specificationValues.option',
                 'item.products' => fn (HasMany $products) => $products
                     ->where('status', GlobalStatusEnum::ACTIVE->value)
+                    ->visibleToCustomers()
                     ->with(['color', 'size'])
                     ->orderBy('price')
                     ->orderBy('id'),

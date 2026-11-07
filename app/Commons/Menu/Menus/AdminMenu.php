@@ -6,12 +6,14 @@ use App\Commons\Menu\Contracts\MenuDefinition;
 use App\Commons\Menu\MenuBuilder;
 use App\Services\Contracts\OrderServiceInterface;
 use App\Services\Contracts\ProductReviewServiceInterface;
+use App\Services\Contracts\VendorProductApprovalServiceInterface;
 
 class AdminMenu implements MenuDefinition
 {
     public function __construct(
         private readonly OrderServiceInterface $orders,
         private readonly ProductReviewServiceInterface $reviews,
+        private readonly VendorProductApprovalServiceInterface $vendorProducts,
     )
     {
     }
@@ -26,9 +28,17 @@ class AdminMenu implements MenuDefinition
                 ->routeGroup(['admin.dashboard.*'])
                 ->build(),
             MenuBuilder::make('کاربران')
-                ->route('admin.users.index')
                 ->icon('ki-users')
-                ->routeGroup(['admin.users.*'])
+                ->children([
+                    MenuBuilder::make('فهرست کاربران')
+                        ->route('admin.users.index')
+                        ->routeGroup(['admin.users.*'])
+                        ->build(),
+                    MenuBuilder::make('کمیسیون‌ها')
+                        ->route('admin.commissions.index')
+                        ->routeGroup(['admin.commissions.*'])
+                        ->build(),
+                ])
                 ->build(),
             MenuBuilder::make('سفارش‌ها')
                 ->route('admin.orders.index')
@@ -80,6 +90,11 @@ class AdminMenu implements MenuDefinition
                     MenuBuilder::make('محصولات')
                         ->route('admin.products.index')
                         ->routeGroup(['admin.products.*'])
+                        ->build(),
+                    MenuBuilder::make('تأیید محصولات فروشندگان')
+                        ->route('admin.vendor-products.index')
+                        ->routeGroup(['admin.vendor-products.*'])
+                        ->badge(fn (): int => $this->vendorProducts->pendingCount(), 'warning')
                         ->build(),
                     MenuBuilder::make('مشخصات کالا')
                         ->route('admin.specifications.index')

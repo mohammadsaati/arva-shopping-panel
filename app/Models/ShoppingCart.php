@@ -32,7 +32,7 @@ class ShoppingCart extends Model
     {
         return self::query()
             ->where('shopping_key', $shoppingKey)
-            ->with(['items.product.item', 'items.product.color', 'items.product.size'])
+            ->with(['items.product.item', 'items.product.color', 'items.product.size', 'items.vendorProduct.vendor'])
             ->first();
     }
 
@@ -73,7 +73,7 @@ class ShoppingCart extends Model
     public function subtotal(): int
     {
         return $this->loadedItems()->sum(
-            fn (ShoppingCartItem $item): int => $item->product->price * $item->count,
+            fn (ShoppingCartItem $item): int => $item->unitPrice() * $item->count,
         );
     }
 
@@ -97,7 +97,7 @@ class ShoppingCart extends Model
     private function loadedItems(): Collection
     {
         if (! $this->relationLoaded('items')) {
-            $this->load('items.product');
+            $this->load('items.product', 'items.vendorProduct');
         }
 
         return $this->getRelation('items');

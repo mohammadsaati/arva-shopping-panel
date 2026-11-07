@@ -48,7 +48,7 @@
                         @foreach ($cart->items as $cartItem)
                             @php
                                 $product = $cartItem->product;
-                                $lineTotal = $product->price * $cartItem->count;
+                                $lineTotal = $cartItem->unitPrice() * $cartItem->count;
                                 $swatch = $product->color?->value;
                                 $swatchIsColor = is_string($swatch) && preg_match('/^#([0-9a-fA-F]{3}|[0-9a-fA-F]{6})$/', $swatch) === 1;
                             @endphp
@@ -64,7 +64,7 @@
                                             type="number"
                                             :value="$cartItem->count"
                                             min="1"
-                                            :max="$product->stock"
+                                            :max="$cartItem->availableStock()"
                                             :aria-label="'تعداد ' . $product->item->name"
                                             required
                                         />
@@ -84,8 +84,11 @@
                                         @if ($product->size)
                                             <li>سایز {{ $product->size->value }}</li>
                                         @endif
-                                        @if ($product->stock <= 5)
-                                            <li class="is-stock">فقط {{ $product->stock }} عدد مانده</li>
+                                        @if ($cartItem->vendorProduct)
+                                            <li>فروشنده: {{ $cartItem->vendorProduct->vendor->company_name }}</li>
+                                        @endif
+                                        @if ($cartItem->availableStock() <= 5)
+                                            <li class="is-stock">فقط {{ $cartItem->availableStock() }} عدد مانده</li>
                                         @else
                                             <li>ارسال بعد از ثبت نشانی</li>
                                         @endif
@@ -94,7 +97,7 @@
                                         <strong>{{ number_format($lineTotal) }}</strong>
                                         <span>تومان</span>
                                         @if ($cartItem->count > 1)
-                                            <small>{{ number_format($product->price) }} تومان برای هر عدد</small>
+                                            <small>{{ number_format($cartItem->unitPrice()) }} تومان برای هر عدد</small>
                                         @endif
                                     </div>
                                 </div>

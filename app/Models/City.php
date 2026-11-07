@@ -107,4 +107,22 @@ class City extends Model
             ->map(fn ($cities): array => $cities->pluck('name', 'id')->all())
             ->all();
     }
+
+    /** @return array<string, array<int, string>> */
+    public static function activeVendorOptions(): array
+    {
+        return self::query()
+            ->with('province')
+            ->where('status', GlobalStatusEnum::ACTIVE->value)
+            ->orderBy('name')
+            ->get()
+            ->groupBy(fn (self $city): string => $city->province->name)
+            ->map(fn ($cities): array => $cities->pluck('name', 'id')->all())
+            ->all();
+    }
+
+    public static function isActiveId(int $cityId): bool
+    {
+        return self::query()->whereKey($cityId)->where('status', GlobalStatusEnum::ACTIVE->value)->exists();
+    }
 }

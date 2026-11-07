@@ -44,6 +44,7 @@ use Closure;
  * @property-read CustomerAddress $address
  * @property-read Discount|null $discount
  * @property-read \Illuminate\Database\Eloquent\Collection<int, OrderItem> $items
+ * @property-read \Illuminate\Database\Eloquent\Collection<int, VendorOrder> $vendorOrders
  * @property-read \Illuminate\Database\Eloquent\Collection<int, Transaction> $paymentTransactions
  */
 #[Guarded('id')]
@@ -64,6 +65,11 @@ class Order extends Model
     public function items(): HasMany
     {
         return $this->hasMany(OrderItem::class);
+    }
+
+    public function vendorOrders(): HasMany
+    {
+        return $this->hasMany(VendorOrder::class);
     }
 
     public function discount(): BelongsTo
@@ -175,6 +181,8 @@ class Order extends Model
                 'items.product.item',
                 'items.product.color',
                 'items.product.size',
+                'items.vendorOrder',
+                'vendorOrders.vendor',
             ])
             ->findOrFail($orderId);
     }
@@ -299,6 +307,7 @@ class Order extends Model
 
         $this->status = $status;
         $this->save();
+        VendorOrder::syncStatusForOrder($this, $status);
 
         if ($status === OrderStatusEnum::CANCELLED) {
             $this->restoreInventoryIfNeeded();
@@ -311,7 +320,7 @@ class Order extends Model
             return;
         }
 
-        $this->loadMissing('items.product');
+        $this->loadMissing('items.product', 'items.vendorProduct');
 
         foreach ($this->items as $orderItem) {
             $product = $orderItem->product;
@@ -319,6 +328,8 @@ class Order extends Model
             if ($product !== null) {
                 $product->increaseStock($orderItem->count);
             }
+
+            $orderItem->vendorProduct?->increaseStock($orderItem->count);
         }
 
         $this->inventory_restored = true;

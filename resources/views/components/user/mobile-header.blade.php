@@ -80,6 +80,12 @@
                         <span>درباره ما</span>
                     </a>
                     @auth
+                        @if (auth()->user()?->type === \App\Enums\UserTypeEnum::VENDOR)
+                            <a href="{{ route('vendor.dashboard.index') }}">
+                                <i class="ki-filled ki-shop" aria-hidden="true"></i>
+                                <span>پنل فروشنده</span>
+                            </a>
+                        @endif
                         @if (Route::has('account.show'))
                             <a href="{{ route('account.show') }}">
                                 <i class="ki-filled ki-profile-circle" aria-hidden="true"></i>

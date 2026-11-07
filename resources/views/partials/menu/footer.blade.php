@@ -1,7 +1,8 @@
 @php
     $isOwner = request()->is('owner*');
-    $authUser = $isOwner ? auth()->user() : auth('admin')->user();
-    $logoutRouteName = $isOwner ? 'owner.auth.logout' : 'admin.auth.logout';
+    $isVendor = request()->is('vendor*');
+    $authUser = ($isOwner || $isVendor) ? auth()->user() : auth('admin')->user();
+    $logoutRouteName = $isVendor ? 'logout' : ($isOwner ? 'owner.auth.logout' : 'admin.auth.logout');
     $userName = $authUser?->first_name
         ? trim($authUser->first_name.' '.($authUser->last_name ?? ''))
         : ($authUser?->name ?? 'حساب کاربری');

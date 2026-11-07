@@ -10,6 +10,8 @@ final readonly class DiscountQuoteData
         public Discount $discount,
         public int $discountAmount,
         public int $eligibleSubtotal,
+        /** @var list<int> */
+        public array $eligibleProductIds = [],
     ) {
     }
 }

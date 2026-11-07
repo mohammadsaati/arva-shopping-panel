@@ -39,7 +39,7 @@ class UserAuthController extends Controller
 
         $request->session()->regenerate();
 
-        return redirect()->intended(route('home'));
+        return redirect()->intended(route($this->auth->defaultRedirectRoute()));
     }
 
     public function registerForm(): View

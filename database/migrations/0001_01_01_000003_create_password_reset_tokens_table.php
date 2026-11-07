@@ -8,9 +8,10 @@ return new class extends Migration
 {
     public function up(): void
     {
-        Schema::table('users', function (Blueprint $table): void {
-            $table->string('recovery_email')->nullable()->unique()->after('phone');
-        });
+        // Existing installations already created this table in the former recovery-email migration.
+        if (Schema::hasTable('password_reset_tokens')) {
+            return;
+        }
 
         Schema::create('password_reset_tokens', function (Blueprint $table): void {
             $table->string('email')->primary();
@@ -22,9 +23,5 @@ return new class extends Migration
     public function down(): void
     {
         Schema::dropIfExists('password_reset_tokens');
-
-        Schema::table('users', function (Blueprint $table): void {
-            $table->dropColumn('recovery_email');
-        });
     }
 };

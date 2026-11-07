@@ -40,3 +40,4 @@
 ## Local tooling
 
 - The user asked to remove PHP and Composer from this machine. Do not reinstall PHP, Composer, or Laravel Boost automatically. When they are unavailable, make source changes without Artisan and report that runtime checks could not be run.
+- For SSH or SCP access to the deployment server, read `SERVER_IP_ADDRESS`, `SERVER_PORT`, `SERVER_USERNAME`, and `SERVER_SSH_KEY_PATH` from this project's local, Git-ignored `.env`. Pass the configured private key path with `-i` and use `IdentitiesOnly=yes` and `BatchMode=yes`; do not use `SERVER_PASSWORD` for routine connections or copy the private key contents into `.env` or Git.

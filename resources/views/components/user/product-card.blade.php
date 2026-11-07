@@ -3,6 +3,7 @@
 @php
     $item = $item ?? $product?->item;
     $product = $product ?? $item?->products?->first();
+    $preferredOffer = $product?->bestVendorOffer();
 @endphp
 
 @if ($item && $product)
@@ -42,7 +43,7 @@
         @endif
 
         <div class="store-product-card__price-row">
-            <strong>{{ number_format($product->price) }} <span>تومان</span></strong>
+            <strong>{{ number_format($preferredOffer?->effectivePrice($product) ?? $product->price) }} <span>تومان</span></strong>
         </div>
         @if ($product->stock > 0)
             <x-card.form

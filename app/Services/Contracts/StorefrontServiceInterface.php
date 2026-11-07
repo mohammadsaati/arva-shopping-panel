@@ -9,6 +9,7 @@ use App\Models\Category;
 use App\Models\Banner;
 use App\Models\Item;
 use App\Models\Product;
+use App\Models\VendorProduct;
 use App\Models\Section;
 use App\Models\Slider;
 use Illuminate\Database\Eloquent\Collection;
@@ -40,6 +41,9 @@ interface StorefrontServiceInterface
     public function catalogBrands(): array;
 
     public function productDetails(int $productId): Product;
+
+    /** @return Collection<int, VendorProduct> */
+    public function productOffers(int $productId): Collection;
 
     /** @return Collection<int, Product> */
     public function relatedProducts(int $categoryId, int $excludedItemId): Collection;

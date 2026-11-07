@@ -15,6 +15,7 @@ class StoreCartItemRequest extends FormRequest
     {
         return [
             'quantity' => ['sometimes', 'required', 'integer', 'min:1', 'max:99'],
+            'vendor_product_id' => ['nullable', 'integer', 'min:1'],
         ];
     }
 

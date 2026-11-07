@@ -4,6 +4,7 @@ namespace App\Providers;
 
 use App\Commons\Menu\MenuRegistry;
 use App\Commons\Menu\Menus\AdminMenu;
+use App\Commons\Menu\Menus\VendorMenu;
 use App\Services\CategoryService;
 use App\Services\AdminAuthService;
 use App\Services\CityService;
@@ -24,6 +25,7 @@ use App\Services\Contracts\ColorServiceInterface;
 use App\Services\Contracts\ItemServiceInterface;
 use App\Services\Contracts\ProductServiceInterface;
 use App\Services\Contracts\ProductReviewServiceInterface;
+use App\Services\Contracts\VendorProductApprovalServiceInterface;
 use App\Services\Contracts\SizeServiceInterface;
 use App\Services\Contracts\SectionServiceInterface;
 use App\Services\Contracts\SliderServiceInterface;
@@ -32,6 +34,8 @@ use App\Services\Contracts\SpecificationServiceInterface;
 use App\Services\Contracts\UserAuthServiceInterface;
 use App\Services\Contracts\UserPasswordResetServiceInterface;
 use App\Services\Contracts\UserServiceInterface;
+use App\Services\Contracts\VendorServiceInterface;
+use App\Services\Contracts\CommissionServiceInterface;
 use App\Services\Contracts\CustomerAddressServiceInterface;
 use App\Services\Contracts\ShoppingCartServiceInterface;
 use App\Services\Contracts\OrderServiceInterface;
@@ -40,6 +44,7 @@ use App\Services\Contracts\DiscountServiceInterface;
 use App\Services\ItemService;
 use App\Services\ProductService;
 use App\Services\ProductReviewService;
+use App\Services\VendorProductApprovalService;
 use App\Services\ColorService;
 use App\Services\SizeService;
 use App\Services\SectionService;
@@ -49,6 +54,10 @@ use App\Services\SpecificationService;
 use App\Services\UserAuthService;
 use App\Services\UserPasswordResetService;
 use App\Services\UserService;
+use App\Services\VendorService;
+use App\Services\VendorPanelService;
+use App\Services\Contracts\VendorPanelServiceInterface;
+use App\Services\CommissionService;
 use App\Services\CustomerAddressService;
 use App\Services\ShoppingCartService;
 use App\Services\OrderService;
@@ -97,7 +106,9 @@ class AppServiceProvider extends ServiceProvider
         MenuRegistry::register('admin', new AdminMenu(
             app(OrderServiceInterface::class),
             app(ProductReviewServiceInterface::class),
+            app(VendorProductApprovalServiceInterface::class),
         ));
+        MenuRegistry::register('vendor', new VendorMenu());
 
         View::composer('components.user.header', function ($view): void {
             $shoppingKey = request()->session()->get('shopping_key');
@@ -129,6 +140,7 @@ class AppServiceProvider extends ServiceProvider
         $this->app->singleton(ItemServiceInterface::class, ItemService::class);
         $this->app->singleton(ProductServiceInterface::class, ProductService::class);
         $this->app->singleton(ProductReviewServiceInterface::class, ProductReviewService::class);
+        $this->app->singleton(VendorProductApprovalServiceInterface::class, VendorProductApprovalService::class);
         $this->app->singleton(SizeServiceInterface::class, SizeService::class);
         $this->app->singleton(SectionServiceInterface::class, SectionService::class);
         $this->app->singleton(SliderServiceInterface::class, SliderService::class);
@@ -149,6 +161,9 @@ class AppServiceProvider extends ServiceProvider
         $this->app->singleton(TelegramBotClientInterface::class, TelegramBotClient::class);
         $this->app->singleton(AdminTelegramConnectionServiceInterface::class, AdminTelegramConnectionService::class);
         $this->app->singleton(UserServiceInterface::class, UserService::class);
+        $this->app->singleton(VendorServiceInterface::class, VendorService::class);
+        $this->app->singleton(VendorPanelServiceInterface::class, VendorPanelService::class);
+        $this->app->singleton(CommissionServiceInterface::class, CommissionService::class);
         $this->app->singleton(CustomerAddressServiceInterface::class, CustomerAddressService::class);
     }
 }

@@ -12,4 +12,6 @@ interface UserAuthServiceInterface
     public function register(UserCreateData $data): User;
 
     public function logout(): void;
+
+    public function defaultRedirectRoute(): string;
 }

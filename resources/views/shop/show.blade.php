@@ -1,6 +1,7 @@
 @php
     $item = $product->item;
     $specificationRows = $item->specificationDisplayRows();
+    $defaultVendorOffer = $vendorOffers->first();
 @endphp
 
 <x-user-layout :title="$item->name . ' | ' . site_name()">
@@ -115,7 +116,7 @@
                 </span>
 
                 <div class="store-detail__purchase-price">
-                    <strong>{{ number_format($product->price) }}</strong>
+                    <strong data-vendor-price>{{ number_format($defaultVendorOffer?->effectivePrice($product) ?? $product->price) }}</strong>
                     <span>تومان</span>
                 </div>
 
@@ -136,13 +137,24 @@
                         :action="route('cart.items.store', ['productId' => $product->id])"
                         :submit="['title' => 'افزودن به سبد خرید', 'type' => 'primary']"
                     >
+                        @if ($vendorOffers->isNotEmpty())
+                            <x-form.select
+                                name="vendor_product_id"
+                                label="فروشنده"
+                                :options="$vendorOffers->mapWithKeys(fn ($offer) => [$offer->id => $offer->vendor->company_name . ' · ' . number_format($offer->effectivePrice($product)) . ' تومان'])->all()"
+                                placeholder="انتخاب خودکار ارزان‌ترین فروشنده"
+                            />
+                            @error('vendor_product_id')
+                                <p class="text-danger text-xs" role="alert">{{ $message }}</p>
+                            @enderror
+                        @endif
                         <x-form.input
                             name="quantity"
                             type="number"
                             label="تعداد"
                             value="1"
                             min="1"
-                            :max="$product->stock"
+                            :max="min($product->stock, $defaultVendorOffer?->stock ?? $product->stock)"
                             required
                         />
                     </x-card.form>
@@ -278,4 +290,24 @@
             </section>
         @endif
     </section>
+    @if ($vendorOffers->isNotEmpty())
+        @push('scripts')
+            <script>
+                document.addEventListener('DOMContentLoaded', () => {
+                    const select = document.getElementById('select_vendor_product_id');
+                    const price = document.querySelector('[data-vendor-price]');
+                    const quantity = document.getElementById('input_quantity');
+                    const offers = @json($vendorOffers->mapWithKeys(fn ($offer) => [$offer->id => ['price' => $offer->effectivePrice($product), 'stock' => $offer->stock]])->all());
+                    const fallback = @json(['price' => $defaultVendorOffer?->effectivePrice($product) ?? $product->price, 'stock' => $defaultVendorOffer?->stock ?? $product->stock]);
+                    const update = () => {
+                        const offer = offers[select.value] ?? fallback;
+                        price.textContent = Number(offer.price).toLocaleString('en-US');
+                        quantity.max = Math.min(@json($product->stock), offer.stock);
+                    };
+                    select?.addEventListener('change', update);
+                    update();
+                });
+            </script>
+        @endpush
+    @endif
 </x-user-layout>

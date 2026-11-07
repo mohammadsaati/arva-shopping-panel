@@ -19,6 +19,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  * @property Carbon $updated_at
  * @property-read ShoppingCart $cart
  * @property-read Product $product
+ * @property-read VendorProduct|null $vendorProduct
  */
 
 #[Guarded('id')]
@@ -34,6 +35,11 @@ class ShoppingCartItem extends Model
     public function product(): BelongsTo
     {
         return $this->belongsTo(Product::class);
+    }
+
+    public function vendorProduct(): BelongsTo
+    {
+        return $this->belongsTo(VendorProduct::class);
     }
 
     protected function casts(): array
@@ -75,11 +81,12 @@ class ShoppingCartItem extends Model
             ->get();
     }
 
-    public static function createForCart(ShoppingCart $cart, Product $product, int $quantity): self
+    public static function createForCart(ShoppingCart $cart, Product $product, int $quantity, ?VendorProduct $offer = null): self
     {
         $item = new self();
         $item->shopping_cart_id = $cart->id;
         $item->product_id = $product->id;
+        $item->vendor_product_id = $offer?->id;
         $item->count = $quantity;
         $item->save();
 
@@ -90,6 +97,23 @@ class ShoppingCartItem extends Model
     {
         $this->count = $quantity;
         $this->save();
+    }
+
+    public function selectOffer(?VendorProduct $offer, int $quantity): void
+    {
+        $this->vendor_product_id = $offer?->id;
+        $this->count = $quantity;
+        $this->save();
+    }
+
+    public function unitPrice(): int
+    {
+        return $this->vendorProduct?->effectivePrice($this->product) ?? $this->product->price;
+    }
+
+    public function availableStock(): int
+    {
+        return min($this->product->stock, $this->vendorProduct?->stock ?? $this->product->stock);
     }
 
     public static function clearCart(int $cartId): void

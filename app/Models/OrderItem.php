@@ -25,6 +25,8 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  * @property Carbon $updated_at
  * @property-read Order $order
  * @property-read Product $product
+ * @property-read VendorOrder|null $vendorOrder
+ * @property-read VendorProduct|null $vendorProduct
  */
 #[Guarded('id')]
 class OrderItem extends Model
@@ -39,6 +41,16 @@ class OrderItem extends Model
     public function product(): BelongsTo
     {
         return $this->belongsTo(Product::class);
+    }
+
+    public function vendorOrder(): BelongsTo
+    {
+        return $this->belongsTo(VendorOrder::class);
+    }
+
+    public function vendorProduct(): BelongsTo
+    {
+        return $this->belongsTo(VendorProduct::class);
     }
 
     protected function casts(): array
@@ -56,16 +68,35 @@ class OrderItem extends Model
         ];
     }
 
-    public static function createForOrder(Order $order, Product $product, int $count, int $totalPrice): self
+    public static function createForOrder(
+        Order $order,
+        Product $product,
+        int $count,
+        int $unitPrice,
+        int $discountAmount = 0,
+        ?VendorProduct $offer = null,
+        ?VendorOrder $vendorOrder = null,
+    ): self
     {
+        $totalPrice = $unitPrice * $count;
+        $netAmount = $totalPrice - $discountAmount;
+        $rate = $offer?->vendor->commission?->rate_bps ?? 0;
+        $commission = intdiv($netAmount * $rate + 5000, 10000);
         $item = new self();
         $item->order_id = $order->id;
         $item->product_id = $product->id;
         $item->count = $count;
-        $item->unit_price = $product->price;
+        $item->vendor_order_id = $vendorOrder?->id;
+        $item->vendor_product_id = $offer?->id;
+        $item->unit_price = $unitPrice;
         $item->off_price = null;
         $item->total_price = $totalPrice;
+        $item->commission_rate_bps = $rate;
+        $item->commission_amount = $commission;
+        $item->payable_amount = $netAmount - $commission;
         $item->save();
+
+        $vendorOrder?->addLine($totalPrice, $discountAmount, $commission);
 
         return $item;
     }

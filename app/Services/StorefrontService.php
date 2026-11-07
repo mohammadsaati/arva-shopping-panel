@@ -10,6 +10,7 @@ use App\Models\Banner;
 use App\Models\Brand;
 use App\Models\Item;
 use App\Models\Product;
+use App\Models\VendorProduct;
 use App\Models\Section;
 use App\Models\Slider;
 use App\Services\Contracts\StorefrontServiceInterface;
@@ -71,6 +72,12 @@ class StorefrontService implements StorefrontServiceInterface
     public function productDetails(int $productId): Product
     {
         return Product::storefrontDetails($productId);
+    }
+
+    /** @return Collection<int, VendorProduct> */
+    public function productOffers(int $productId): Collection
+    {
+        return VendorProduct::availableForProduct($productId);
     }
 
     /** @return Collection<int, Product> */

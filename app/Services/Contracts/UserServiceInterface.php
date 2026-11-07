@@ -15,6 +15,12 @@ interface UserServiceInterface
 {
     public function create(UserCreateData $data): User;
 
+    /** @return array<string, array<int, string>> */
+    public function vendorCityOptions(): array;
+
+    /** @return array<int, string> */
+    public function vendorCommissionOptions(): array;
+
     public function details(int $userId): User;
 
     public function updateAdminDetails(User $user, UserAdminUpdateData $data): User;

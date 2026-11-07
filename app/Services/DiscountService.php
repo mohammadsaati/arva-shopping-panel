@@ -101,6 +101,7 @@ class DiscountService implements DiscountServiceInterface
         $categoryIds = $discount->categories->modelKeys();
         $hasRestrictions = $productIds !== [] || $categoryIds !== [];
         $eligibleSubtotal = 0;
+        $eligibleProductIds = [];
 
         foreach ($cart->discountItems() as $cartItem) {
             $product = $cartItem->product;
@@ -110,7 +111,8 @@ class DiscountService implements DiscountServiceInterface
                 || in_array($categoryId, $categoryIds, true);
 
             if ($isEligible) {
-                $eligibleSubtotal += $product->price * $cartItem->count;
+                $eligibleSubtotal += $cartItem->unitPrice() * $cartItem->count;
+                $eligibleProductIds[] = $product->id;
             }
         }
 
@@ -136,6 +138,7 @@ class DiscountService implements DiscountServiceInterface
             discount: $discount,
             discountAmount: $discountAmount,
             eligibleSubtotal: $eligibleSubtotal,
+            eligibleProductIds: array_values(array_unique($eligibleProductIds)),
         );
     }
 

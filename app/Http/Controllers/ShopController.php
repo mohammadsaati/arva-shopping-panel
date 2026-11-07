@@ -48,6 +48,7 @@ class ShopController extends Controller
 
         return view('shop.show', [
             'product' => $product,
+            'vendorOffers' => $this->storefrontService->productOffers($productId),
             'relatedProducts' => $this->storefrontService->relatedProducts(
                 categoryId: $product->item->category_id,
                 excludedItemId: $product->item_id,

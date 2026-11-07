@@ -23,6 +23,13 @@
                     <x-form.input name="job" label="شغل" :value="$user->profile?->job" />
                     <x-form.input name="city_id" label="شناسه شهر" :value="$user->profile?->city_id" dir="ltr" />
                 </x-admin.form-section>
+                <div id="vendor_fields" @if (old('type', $user->type->value) !== \App\Enums\UserTypeEnum::VENDOR->value) hidden @endif>
+                    <x-admin.form-section title="اطلاعات فروشنده" description="مشخصات فروشگاه و کمیسیون اختیاری این فروشنده." icon="ki-filled ki-shop" :two-columns="true">
+                        <x-form.input name="vendor_company_name" label="نام شرکت یا فروشگاه" :value="$user->vendor?->company_name" required />
+                        <x-form.select name="vendor_city_id" label="شهر فروشنده" :options="$vendorCityOptions" :selected="$user->vendor?->city_id" placeholder="شهر را انتخاب کنید" required />
+                        <x-form.select name="commission_id" label="کمیسیون" :options="$vendorCommissionOptions" :selected="$user->vendor?->commission_id" placeholder="بدون کمیسیون" />
+                    </x-admin.form-section>
+                </div>
             </div>
             <aside class="admin-form-sidebar" aria-label="تنظیمات حساب">
                 <x-admin.form-section title="دسترسی و نمایش" description="نوع و وضعیت حساب کاربر" icon="ki-filled ki-setting-2">
@@ -32,4 +39,23 @@
             </aside>
         </div>
     </x-card.form>
+    @push('scripts')
+        <script>
+            document.addEventListener('DOMContentLoaded', () => {
+                const type = document.getElementById('select_type');
+                const section = document.getElementById('vendor_fields');
+                const fields = section?.querySelectorAll('input, select') ?? [];
+                const toggle = () => {
+                    const isVendor = type?.value === @json(\App\Enums\UserTypeEnum::VENDOR->value);
+                    section.hidden = !isVendor;
+                    fields.forEach((field) => {
+                        field.disabled = !isVendor;
+                        field.required = isVendor && field.name !== 'commission_id';
+                    });
+                };
+                type?.addEventListener('change', toggle);
+                toggle();
+            });
+        </script>
+    @endpush
 </x-panel-layout>

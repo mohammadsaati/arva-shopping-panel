@@ -22,6 +22,7 @@ final readonly class ItemCreateData
         public ?ItemProductCreateData $product = null,
         /** @var array<int, \App\DTO\Specification\SpecificationAnswerData> */
         public array $specifications = [],
+        public ?int $vendorId = null,
     ) {
     }
 }

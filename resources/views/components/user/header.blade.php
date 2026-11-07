@@ -40,6 +40,12 @@
             </a>
 
             @auth
+                @if (auth()->user()?->type === \App\Enums\UserTypeEnum::VENDOR)
+                    <a class="user-account-link" href="{{ route('vendor.dashboard.index') }}">
+                        <i class="ki-filled ki-shop" aria-hidden="true"></i>
+                        <span>پنل فروشنده</span>
+                    </a>
+                @endif
                 @if (Route::has('account.show'))
                     <a class="user-account-link" href="{{ route('account.show') }}">
                         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true">

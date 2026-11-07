@@ -183,6 +183,7 @@ class Section extends Model
                         'products' => fn ($products) => $products
                             ->where('status', GlobalStatusEnum::ACTIVE->value)
                             ->where('stock', '>', 0)
+                            ->visibleToCustomers()
                             ->orderBy('price')
                             ->limit(1),
                     ])

@@ -9,6 +9,7 @@ use App\Models\ProductCity;
 use App\Models\CustomerAddress;
 use App\Models\ShoppingCart;
 use App\Models\ShoppingCartItem;
+use App\Models\VendorProduct;
 use App\Services\Contracts\ShoppingCartServiceInterface;
 use Illuminate\Validation\ValidationException;
 use Illuminate\Database\Eloquent\Collection;
@@ -42,18 +43,24 @@ class ShoppingCartService implements ShoppingCartServiceInterface
                 ]);
             }
 
+            $offer = VendorProduct::selectedForCart($product->id, $data->vendorProductId, lock: true);
+
+            if ($data->vendorProductId !== null && $offer === null) {
+                throw ValidationException::withMessages(['vendor_product_id' => 'فروشنده انتخاب‌شده در دسترس نیست.']);
+            }
+
             $quantity = ($cartItem?->count ?? 0) + $data->quantity;
 
-            if ($quantity > $product->stock) {
+            if ($quantity > min($product->stock, $offer?->stock ?? $product->stock)) {
                 throw ValidationException::withMessages([
                     'cart' => 'تعداد درخواستی بیشتر از موجودی این محصول است.',
                 ]);
             }
 
             if ($cartItem === null) {
-                ShoppingCartItem::createForCart($cart, $product, $quantity);
+                ShoppingCartItem::createForCart($cart, $product, $quantity, $offer);
             } else {
-                $cartItem->updateQuantity($quantity);
+                $cartItem->selectOffer($offer, $quantity);
             }
         });
 
@@ -89,6 +96,14 @@ class ShoppingCartService implements ShoppingCartServiceInterface
                     ]);
                 }
 
+                if ($cartItem->vendor_product_id !== null) {
+                    $offer = VendorProduct::findForCart($productId, $cartItem->vendor_product_id, lock: true);
+
+                    if ($offer === null || $quantity > $offer->stock) {
+                        throw ValidationException::withMessages(['cart' => 'موجودی فروشنده برای یکی از کالاها کافی نیست.']);
+                    }
+                }
+
                 $cartItem->updateQuantity($quantity);
             }
         });
@@ -105,13 +120,12 @@ class ShoppingCartService implements ShoppingCartServiceInterface
         });
     }
 
-    /** @param array<int, Product> $products */
-    public function shippingForProducts(array $products, int $cityId): int
+    public function shippingForCart(ShoppingCart $cart, int $cityId): int
     {
-        $productIds = array_map(static fn (Product $product): int => $product->id, $products);
+        $productIds = array_map(static fn (Product $product): int => $product->id, $cart->productsForShipping());
         $cityPrices = ProductCity::pricesForProductsAndCities($productIds, [$cityId]);
 
-        return $this->highestShippingRate($products, $cityPrices[$cityId] ?? []);
+        return $this->highestShippingRate($cart, $cityPrices[$cityId] ?? []);
     }
 
     /**
@@ -120,29 +134,28 @@ class ShoppingCartService implements ShoppingCartServiceInterface
      */
     public function shippingQuotesForAddresses(ShoppingCart $cart, Collection $addresses): array
     {
-        $products = $cart->productsForShipping();
-        $productIds = array_map(static fn (Product $product): int => $product->id, $products);
+        $productIds = array_map(static fn (Product $product): int => $product->id, $cart->productsForShipping());
         $cityIds = $addresses->pluck('city_id')->unique()->values()->all();
         $cityPrices = ProductCity::pricesForProductsAndCities($productIds, $cityIds);
         $quotes = [];
 
         foreach ($addresses as $address) {
-            $quotes[$address->id] = $this->highestShippingRate($products, $cityPrices[$address->city_id] ?? []);
+            $quotes[$address->id] = $this->highestShippingRate($cart, $cityPrices[$address->city_id] ?? []);
         }
 
         return $quotes;
     }
 
     /**
-     * @param array<int, Product> $products
      * @param array<int, int> $cityPrices Product ID to shipping price.
      */
-    private function highestShippingRate(array $products, array $cityPrices): int
+    private function highestShippingRate(ShoppingCart $cart, array $cityPrices): int
     {
         $shipping = 0;
 
-        foreach ($products as $product) {
-            $shipping = max($shipping, $cityPrices[$product->id] ?? $product->shipping_price);
+        foreach ($cart->items as $item) {
+            $product = $item->product;
+            $shipping = max($shipping, $item->vendorProduct?->shipping_price ?? ($cityPrices[$product->id] ?? $product->shipping_price));
         }
 
         return $shipping;

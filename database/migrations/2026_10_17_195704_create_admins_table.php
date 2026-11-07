@@ -20,6 +20,8 @@ return new class extends Migration
             $table->string('status')->default(GlobalStatusEnum::ACTIVE->value);
             $table->unsignedBigInteger('city_id')->nullable();
             $table->string('phone')->nullable();
+            $table->string('telegram_chat_id', 32)->nullable()->unique('admins_telegram_chat_id_unique');
+            $table->timestamp('telegram_connected_at')->nullable();
             $table->timestamps();
         });
     }
